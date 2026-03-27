@@ -144,12 +144,7 @@
  */
 #define efl_lld_driver_fields                                               \
   /* Pointer to SSI registers. */                                           \
-  volatile uint32_t           *ssi;                                         \
-  /* Saved XIP configuration registers. */                                  \
-  uint32_t                    xip_ctrlr0;                                   \
-  uint32_t                    xip_ctrlr1;                                   \
-  uint32_t                    xip_spi_ctrlr0;                               \
-  uint32_t                    xip_baudr;
+  volatile uint32_t           *ssi;
 
 /**
  * @brief   Low level fields of the embedded flash configuration structure.

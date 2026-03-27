@@ -50,7 +50,6 @@
  * @{
  */
 #define SSI_CTRLR0                          0x00U
-#define SSI_CTRLR1                          0x04U
 #define SSI_SSIENR                          0x08U
 #define SSI_SER                             0x10U
 #define SSI_BAUDR                           0x14U
@@ -119,7 +118,6 @@
  */
 #define XIP_CTRL                            0x00U
 #define XIP_FLUSH                           0x04U
-#define XIP_STAT                            0x08U
 /** @} */
 
 /**
@@ -151,8 +149,6 @@
 #define FLASHCMD_READ_STATUS                0x05U
 #define FLASHCMD_PAGE_PROGRAM               0x02U
 #define FLASHCMD_SECTOR_ERASE               0x20U
-#define FLASHCMD_BLOCK_ERASE_32K            0x52U
-#define FLASHCMD_BLOCK_ERASE_64K            0xD8U
 #define FLASHCMD_READ_UNIQUE_ID             0x4BU
 /** @} */
 
@@ -161,7 +157,6 @@
  * @{
  */
 #define FLASH_STATUS_BUSY                   (1U << 0)
-#define FLASH_STATUS_WEL                    (1U << 1)
 /** @} */
 
 /**
@@ -301,12 +296,6 @@ RAMFUNC static void rp_flash_exit_xip(EFlashDriver *eflp) {
   uint32_t padctrl_tmp;
   unsigned i;
   volatile unsigned delay;
-
-  /* Save current XIP configuration. */
-  eflp->xip_ctrlr0 = ssi[SSI_CTRLR0 / 4U];
-  eflp->xip_ctrlr1 = ssi[SSI_CTRLR1 / 4U];
-  eflp->xip_spi_ctrlr0 = ssi[SSI_SPI_CTRLR0 / 4U];
-  eflp->xip_baudr = ssi[SSI_BAUDR / 4U];
 
   while ((ssi[SSI_SR / 4U] & SSI_SR_BUSY) != 0U) {
   }
@@ -450,18 +439,6 @@ RAMFUNC static void rp_flash_erase_cmd(EFlashDriver *eflp, uint8_t cmd,
 }
 
 /**
- * @brief   Start async erase (no wait). MUST be in RAM.
- * @note    Caller must poll rp_flash_is_busy() then flush cache.
- */
-RAMFUNC static void rp_flash_start_erase(EFlashDriver *eflp, uint8_t cmd,
-                                          uint32_t offset) {
-
-  rp_flash_exit_xip(eflp);
-  rp_flash_erase_cmd(eflp, cmd, offset);
-  rp_flash_enter_xip_fast(eflp);
-}
-
-/**
  * @brief   Start async page program (no wait). MUST be in RAM.
  * @note    Caller must poll rp_flash_is_busy() then flush cache.
  */
@@ -549,89 +526,6 @@ RAMFUNC static void rp_flash_read_uid_full(EFlashDriver *eflp,
 /*===========================================================================*/
 /* Driver interrupt handlers.                                                */
 /*===========================================================================*/
-
-/*===========================================================================*/
-/* RP2040 ROM flash function support.                                        */
-/*===========================================================================*/
-
-/**
- * @name    ROM function types and lookup helpers.
- * @{
- */
-typedef void (*rom_void_fn)(void);
-typedef void (*rom_flash_range_program_fn)(uint32_t, const uint8_t *, size_t);
-typedef void (*rom_flash_range_erase_fn)(uint32_t, size_t, uint32_t, uint8_t);
-typedef void *(*rom_table_lookup_fn)(uint16_t *, uint32_t);
-
-#define ROM_HWORD_AS_PTR(addr)  ((uint16_t *)(uint32_t)(*(uint16_t *)(uint32_t)(addr)))
-#define ROM_TABLE_LOOKUP_FN     ((rom_table_lookup_fn)(uint32_t)(*(uint16_t *)(uint32_t)0x18U))
-#define ROM_FUNC_TABLE_PTR      ROM_HWORD_AS_PTR(0x14U)
-#define ROM_CODE(c1, c2)        ((uint32_t)(c2) << 8U | (uint32_t)(c1))
-
-/* Cached ROM function pointers (resolved once). */
-static rom_void_fn                rom_connect_internal_flash;
-static rom_void_fn                rom_flash_exit_xip;
-static rom_flash_range_program_fn rom_flash_range_program;
-static rom_flash_range_erase_fn   rom_flash_range_erase;
-static rom_void_fn                rom_flash_flush_cache;
-static rom_void_fn                rom_flash_enter_cmd_xip;
-
-/** @brief  Resolve ROM flash function pointers (lazy, once). */
-static void rom_flash_lookup(void) {
-
-  if (rom_connect_internal_flash != NULL) {
-    return;
-  }
-
-  uint16_t *ft = ROM_FUNC_TABLE_PTR;
-  rom_table_lookup_fn lookup = ROM_TABLE_LOOKUP_FN;
-
-  rom_connect_internal_flash =
-      (rom_void_fn)lookup(ft, ROM_CODE('I', 'F'));
-  rom_flash_exit_xip =
-      (rom_void_fn)lookup(ft, ROM_CODE('E', 'X'));
-  rom_flash_range_program =
-      (rom_flash_range_program_fn)lookup(ft, ROM_CODE('R', 'P'));
-  rom_flash_range_erase =
-      (rom_flash_range_erase_fn)lookup(ft, ROM_CODE('R', 'E'));
-  rom_flash_flush_cache =
-      (rom_void_fn)lookup(ft, ROM_CODE('F', 'C'));
-  rom_flash_enter_cmd_xip =
-      (rom_void_fn)lookup(ft, ROM_CODE('C', 'X'));
-}
-
-/**
- * @brief   Program one page using ROM functions. MUST be in RAM.
- */
-RAMFUNC static void rp_flash_rom_program_page(
-    uint32_t page_base, const uint8_t *page_buf,
-    rom_void_fn connect, rom_void_fn exit_xip,
-    rom_flash_range_program_fn program,
-    rom_void_fn flush, rom_void_fn enter_xip) {
-
-  connect();
-  exit_xip();
-  program(page_base, page_buf, RP_FLASH_PAGE_SIZE);
-  flush();
-  enter_xip();
-}
-
-/**
- * @brief   Erase flash region using ROM functions. MUST be in RAM.
- */
-RAMFUNC static void rp_flash_rom_erase(
-    uint32_t offset, uint32_t erase_size, uint8_t erase_cmd,
-    rom_void_fn connect, rom_void_fn exit_xip,
-    rom_flash_range_erase_fn erase,
-    rom_void_fn flush, rom_void_fn enter_xip) {
-
-  connect();
-  exit_xip();
-  erase(offset, erase_size, erase_size, erase_cmd);
-  flush();
-  enter_xip();
-}
-/** @} */
 
 /*===========================================================================*/
 /* Driver exported functions.                                                */
