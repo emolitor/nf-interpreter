@@ -386,22 +386,6 @@ RAMFUNC static void rp_flash_enter_xip(EFlashDriver *eflp) {
 }
 
 /**
- * @brief   Enter XIP mode without cache flush. MUST be in RAM.
- * @note    No flush — preserves cached code for ISR handlers.
- */
-RAMFUNC static void rp_flash_enter_xip_fast(EFlashDriver *eflp) {
-  volatile uint32_t *ssi = eflp->ssi;
-  volatile uint32_t *ioqspi_ss_ctrl =
-      (volatile uint32_t *)(RP_IOQSPI_BASE + IOQSPI_GPIO_QSPI_SS_CTRL);
-
-  ssi[SSI_SSIENR / 4U] = 0U;
-  ssi[SSI_CTRLR0 / 4U] = SSI_CTRLR0_XIP;
-  ssi[SSI_SPI_CTRLR0 / 4U] = SSI_SPI_CTRLR0_XIP;
-  ssi[SSI_SSIENR / 4U] = 1U;
-  *ioqspi_ss_ctrl = 0U;            /* CS to normal. */
-}
-
-/**
  * @brief   Program a page of flash. MUST be in RAM.
  */
 RAMFUNC static void rp_flash_program_page(EFlashDriver *eflp, uint32_t offset,
@@ -436,20 +420,6 @@ RAMFUNC static void rp_flash_erase_cmd(EFlashDriver *eflp, uint8_t cmd,
   addr[1] = (uint8_t)(offset >> 8);
   addr[2] = (uint8_t)offset;
   rp_flash_do_cmd(eflp, cmd, addr, NULL, 3U);
-}
-
-/**
- * @brief   Start async page program (no wait). MUST be in RAM.
- * @note    Caller must poll rp_flash_is_busy() then flush cache.
- */
-RAMFUNC static void rp_flash_start_program_page(EFlashDriver *eflp,
-                                                uint32_t offset,
-                                                const uint8_t *data,
-                                                size_t len) {
-
-  rp_flash_exit_xip(eflp);
-  rp_flash_program_page(eflp, offset, data, len);
-  rp_flash_enter_xip_fast(eflp);
 }
 
 /**
@@ -497,19 +467,6 @@ RAMFUNC static void rp_flash_erase_full(EFlashDriver *eflp, uint8_t cmd,
   rp_flash_erase_cmd(eflp, cmd, offset);
   rp_flash_wait_ready(eflp);
   rp_flash_enter_xip(eflp);
-}
-
-/**
- * @brief   Poll flash busy bit with XIP transitions. MUST be in RAM.
- */
-RAMFUNC static bool rp_flash_is_busy(EFlashDriver *eflp) {
-  uint8_t status;
-
-  rp_flash_exit_xip(eflp);
-  rp_flash_do_cmd(eflp, FLASHCMD_READ_STATUS, NULL, &status, 1U);
-  rp_flash_enter_xip_fast(eflp);
-
-  return (status & FLASH_STATUS_BUSY) != 0U;
 }
 
 /**
@@ -882,102 +839,6 @@ void efl_lld_read_unique_id(EFlashDriver *eflp, uint8_t *uid) {
   osalSysUnlock();
 
   memcpy(uid, rx + 4U, RP_FLASH_UNIQUE_ID_SIZE);
-}
-
-/**
- * @brief   Starts a single-page program operation (non-blocking).
- * @note    This is the program counterpart of @p efl_lld_start_erase_sector().
- *          It sends the page-program command and returns immediately.
- *          The caller must poll @p efl_lld_query_program() for completion.
- *          Only ONE page (up to 256 bytes, must not cross a page boundary)
- *          may be programmed per start/query cycle.
- *
- * @param[in] instance  pointer to a @p EFlashDriver instance
- * @param[in] offset    flash offset (must not cross page boundary)
- * @param[in] n         number of bytes to program (<= page size)
- * @param[in] pp        pointer to the data buffer (may be in flash/XIP)
- * @return              An error code.
- * @retval FLASH_NO_ERROR           if the command was sent successfully.
- * @retval FLASH_BUSY_ERASING       if there is an erase operation in progress.
- *
- * @notapi
- */
-flash_error_t efl_lld_start_program_page(void *instance,
-                                         flash_offset_t offset,
-                                         size_t n, const uint8_t *pp) {
-  EFlashDriver *devp = (EFlashDriver *)instance;
-  uint8_t page_buf[RP_FLASH_PAGE_SIZE];
-  syssts_t sts;
-
-  osalDbgCheck((instance != NULL) && (pp != NULL) && (n > 0U));
-  osalDbgCheck(n <= RP_FLASH_PAGE_SIZE);
-  osalDbgCheck((size_t)offset + n <= (size_t)efl_lld_descriptor.size);
-  osalDbgAssert((devp->state == FLASH_READY) || (devp->state == FLASH_ERASE),
-                "invalid state");
-
-  /* No programming while erasing. */
-  if (devp->state == FLASH_ERASE) {
-    return FLASH_BUSY_ERASING;
-  }
-
-  /* FLASH_PGM state while the operation is in progress. */
-  devp->state = FLASH_PGM;
-
-  /* Copy source data to RAM while XIP is still active. */
-  memcpy(page_buf, pp, n);
-
-  /* Lock while XIP is disabled for the SPI page-program transfer. */
-  sts = osalSysGetStatusAndLockX();
-  rp_flash_start_program_page(devp, offset, page_buf, n);
-  osalSysRestoreStatusX(sts);
-
-  return FLASH_NO_ERROR;
-}
-
-/**
- * @brief   Queries the driver for program operation progress.
- * @note    This is the program counterpart of @p efl_lld_query_erase().
- *          When programming is complete the XIP cache is flushed and
- *          the driver returns to FLASH_READY state.
- *
- * @param[in] instance  pointer to a @p EFlashDriver instance
- * @param[out] msec     recommended time, in milliseconds, that
- *                      should be spent before calling this
- *                      function again, can be @p NULL
- * @return              An error code.
- * @retval FLASH_NO_ERROR           if there is no program operation in progress.
- * @retval FLASH_BUSY_ERASING       if there is a program operation in progress.
- *
- * @notapi
- */
-flash_error_t efl_lld_query_program(void *instance, uint32_t *msec) {
-  EFlashDriver *devp = (EFlashDriver *)instance;
-  syssts_t sts;
-  bool busy;
-
-  /* If there is a program in progress then the device must be checked. */
-  if (devp->state == FLASH_PGM) {
-
-    /* Lock while XIP is briefly disabled for flash status read. */
-    sts = osalSysGetStatusAndLockX();
-    busy = rp_flash_is_busy(devp);
-    if (!busy) {
-      rp_flash_flush_cache();
-    }
-    osalSysRestoreStatusX(sts);
-
-    if (busy) {
-      if (msec != NULL) {
-        *msec = RP_FLASH_WAIT_TIME_MS;
-      }
-      return FLASH_BUSY_ERASING;
-    }
-
-    /* Program complete. */
-    devp->state = FLASH_READY;
-  }
-
-  return FLASH_NO_ERROR;
 }
 
 #pragma GCC diagnostic pop

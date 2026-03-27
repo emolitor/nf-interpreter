@@ -181,10 +181,6 @@ extern "C" {
                                           uint32_t block);
   flash_error_t efl_lld_query_erase(void *instance, uint32_t *wait_time);
   flash_error_t efl_lld_verify_erase(void *instance, flash_sector_t sector);
-  flash_error_t efl_lld_start_program_page(void *instance,
-                                           flash_offset_t offset,
-                                           size_t n, const uint8_t *pp);
-  flash_error_t efl_lld_query_program(void *instance, uint32_t *msec);
   void efl_lld_read_unique_id(EFlashDriver *eflp, uint8_t *uid);
 #ifdef __cplusplus
 }
