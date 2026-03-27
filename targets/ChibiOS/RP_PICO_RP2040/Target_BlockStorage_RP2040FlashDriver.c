@@ -16,6 +16,25 @@
 // RP2040 flash page size (256B) - minimum write unit
 #define RP2040_FLASH_PAGE_SIZE 256U
 
+// RP2040 XIP cache control registers
+#define XIP_CTRL_BASE   0x14000000U
+#define XIP_CTRL_OFFSET 0x00U
+#define XIP_FLUSH_OFFSET 0x04U
+#define XIP_CTRL_EN     1U
+
+// Flush and re-enable the XIP cache so subsequent reads return fresh flash data.
+static void RP2040_FlushXIPCache(void)
+{
+    volatile uint32_t *xip = (volatile uint32_t *)XIP_CTRL_BASE;
+
+    // Trigger cache flush
+    xip[XIP_FLUSH_OFFSET / 4U] = 1U;
+    // Read back blocks until flush is complete
+    (void)xip[XIP_FLUSH_OFFSET / 4U];
+    // Re-enable cache
+    xip[XIP_CTRL_OFFSET / 4U] |= XIP_CTRL_EN;
+}
+
 // Reference to ChibiOS EFL driver instance
 extern EFlashDriver EFLD1;
 
@@ -49,6 +68,9 @@ bool RP2040FlashDriver_Read(void *context, ByteAddress startAddress, unsigned in
 {
     (void)context;
 
+    // Flush XIP cache to ensure we read fresh data from flash
+    RP2040_FlushXIPCache();
+
     // RP2040 flash is XIP memory-mapped, so we can read directly
     memcpy(buffer, (const void *)startAddress, numBytes);
 
@@ -71,12 +93,18 @@ bool RP2040FlashDriver_Write(
     // exit_xip → program → busy-wait → enter_xip per page internally.
     flash_error_t err = flashProgram(&EFLD1, offset, numBytes, buffer);
 
+    // Flush XIP cache so subsequent reads see the new data
+    RP2040_FlushXIPCache();
+
     return (err == FLASH_NO_ERROR);
 }
 
 bool RP2040FlashDriver_IsBlockErased(void *context, ByteAddress blockAddress, unsigned int length)
 {
     (void)context;
+
+    // Flush XIP cache to ensure we read fresh data
+    RP2040_FlushXIPCache();
 
     // Check if all bytes are 0xFF (erased state)
     unsigned char *p = (unsigned char *)blockAddress;
@@ -123,6 +151,9 @@ bool RP2040FlashDriver_EraseBlock(void *context, ByteAddress address)
         }
     } while (err == FLASH_BUSY_ERASING);
 
+    // Flush XIP cache so subsequent reads see the erased state
+    RP2040_FlushXIPCache();
+
     return (err == FLASH_NO_ERROR);
 }
 
@@ -131,6 +162,10 @@ int nf_TargetFlashWrite(uint32_t startAddress, uint32_t length, const uint8_t *b
 {
     flash_offset_t offset = (flash_offset_t)(startAddress - RP2040_XIP_BASE);
     flash_error_t err = flashProgram(&EFLD1, offset, length, buffer);
+
+    // Flush XIP cache so subsequent reads see the new data
+    RP2040_FlushXIPCache();
+
     return (err == FLASH_NO_ERROR) ? 1 : 0;
 }
 
@@ -158,6 +193,9 @@ int nf_TargetFlashErase(uint32_t address)
             chThdSleepMilliseconds(wait_time);
         }
     } while (err == FLASH_BUSY_ERASING);
+
+    // Flush XIP cache so subsequent reads see the erased state
+    RP2040_FlushXIPCache();
 
     return (err == FLASH_NO_ERROR) ? 1 : 0;
 }
