@@ -125,7 +125,6 @@ set(CHIBIOS_HAL_SRCS
     hal_usb_lld.c
     hal_wdg_lld.c
     hal_efl_lld.c
-    rp_efl_lld.c
     hal_rtc_lld.c
 
     # OSAL
@@ -153,7 +152,6 @@ foreach(SRC_FILE ${CHIBIOS_HAL_SRCS})
 
             ${chibios_SOURCE_DIR}/os/hal/ports/RP/RP2040
 
-            ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/EFLv1
             ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/ADCv1
             ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/DMAv1
             ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/GPIOv1
@@ -184,8 +182,6 @@ endforeach()
 
 # Suppress -Wshadow for ChibiOS ADC HAL (variable shadowing in macro expansion)
 SET_SOURCE_FILES_PROPERTIES(${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/ADCv1/hal_adc_lld.c PROPERTIES COMPILE_FLAGS -Wno-shadow)
-# Suppress -Wunused-parameter for trunk EFL driver (rp_flash_enter_xip has unused eflp parameter)
-SET_SOURCE_FILES_PROPERTIES(${chibios_SOURCE_DIR}/os/hal/ports/RP/RP2040/hal_efl_lld.c PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
 
 include(FindPackageHandleStandardArgs)
 

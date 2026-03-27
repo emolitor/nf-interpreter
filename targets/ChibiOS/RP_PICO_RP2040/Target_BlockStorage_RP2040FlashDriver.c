@@ -23,7 +23,8 @@
 #define XIP_CTRL_EN     1U
 
 // Flush and re-enable the XIP cache so subsequent reads return fresh flash data.
-static void RP2040_FlushXIPCache(void)
+// MUST be in RAM — flushing the cache invalidates the lines containing this code.
+__attribute__((noinline, section(".ramtext"))) static void RP2040_FlushXIPCache(void)
 {
     volatile uint32_t *xip = (volatile uint32_t *)XIP_CTRL_BASE;
 
