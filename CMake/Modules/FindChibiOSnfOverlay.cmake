@@ -27,10 +27,7 @@ if(TARGET_VENDOR STREQUAL "ST")
 endif()
 
 # RP-specific overlay components
-if(TARGET_VENDOR STREQUAL "RP")
-    # component RP_EFL (Embedded Flash driver using ROM functions)
-    list(APPEND ChibiOSnfOverlay_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/ports/RP/LLD/EFLv1)
-endif()
+# (RP_EFL overlay disabled — testing ChibiOS trunk EFL driver directly)
 
 ##################################################################################################################################
 # Add above the required include directory(ies) for a new nanoFramework overlay component that you are adding

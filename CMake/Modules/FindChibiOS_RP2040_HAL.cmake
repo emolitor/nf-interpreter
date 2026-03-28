@@ -9,8 +9,9 @@ FetchContent_GetProperties(chibios)
 # set include directories for ChibiOS HAL (RP2040)
 list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${chibios_SOURCE_DIR}/os/hal/ports/common/ARMCMx)
 list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${chibios_SOURCE_DIR}/os/hal/include)
-# nanoFramework overlay for RP EFL driver (must appear before ChibiOS RP2040 so overrides take precedence)
-list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/ports/RP/LLD/EFLv1)
+# RP2040 chip-specific EFL driver header (hal_efl_lld.h is in RP2040/ in trunk)
+# Note: ${chibios_SOURCE_DIR}/os/hal/ports/RP/RP2040 is already added below
+# and ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/EFLv1 is also added for rp_efl_lld.h
 # RP common port directory (contains rp_bootrom.h needed by trunk)
 list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${chibios_SOURCE_DIR}/os/hal/ports/RP)
 list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${chibios_SOURCE_DIR}/os/hal/ports/RP/RP2040)
@@ -125,6 +126,7 @@ set(CHIBIOS_HAL_SRCS
     hal_usb_lld.c
     hal_wdg_lld.c
     hal_efl_lld.c
+    rp_efl_lld.c
     hal_rtc_lld.c
 
     # OSAL
@@ -140,8 +142,8 @@ foreach(SRC_FILE ${CHIBIOS_HAL_SRCS})
     find_file(CHIBIOS_HAL_SRC_FILE ${SRC_FILE}
         PATHS 
 
-            # nanoFramework overlay (checked first so overrides take precedence)
-            ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/ports/RP/LLD/EFLv1
+            # ChibiOS trunk EFL driver sources
+            ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/EFLv1
 
             ${chibios_SOURCE_DIR}/os/common/ports/ARMv6-M/compilers/GCC
             ${chibios_SOURCE_DIR}/os/common/startup/ARMCMx/compilers/GCC
