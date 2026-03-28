@@ -27,7 +27,7 @@ if(TARGET_VENDOR STREQUAL "ST")
 endif()
 
 # RP-specific overlay components
-# (RP_EFL overlay disabled — testing ChibiOS trunk EFL driver directly)
+# (no RP overlays — EFL driver comes from ChibiOS trunk)
 
 ##################################################################################################################################
 # Add above the required include directory(ies) for a new nanoFramework overlay component that you are adding
@@ -66,10 +66,7 @@ if(TARGET_VENDOR STREQUAL "ST")
 endif()
 
 # RP-specific overlay sources
-if(TARGET_VENDOR STREQUAL "RP")
-    # component RP_EFL — hal_efl_lld.c is picked up via find_file() override in FindChibiOS_RP2040_HAL.cmake
-    # (no additional sources needed here; the override is resolved by search path priority)
-endif()
+# (no RP overlays — EFL driver comes from ChibiOS trunk)
 
 #########################################################################################################################
 # Add above ALL the source code file(s) required for a new nanoFramework overlay component that you are adding

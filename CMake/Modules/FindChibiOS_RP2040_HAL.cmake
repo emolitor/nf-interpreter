@@ -9,10 +9,7 @@ FetchContent_GetProperties(chibios)
 # set include directories for ChibiOS HAL (RP2040)
 list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${chibios_SOURCE_DIR}/os/hal/ports/common/ARMCMx)
 list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${chibios_SOURCE_DIR}/os/hal/include)
-# RP2040 chip-specific EFL driver header (hal_efl_lld.h is in RP2040/ in trunk)
-# Note: ${chibios_SOURCE_DIR}/os/hal/ports/RP/RP2040 is already added below
-# and ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/EFLv1 is also added for rp_efl_lld.h
-# RP common port directory (contains rp_bootrom.h needed by trunk)
+# RP common port directory (contains rp_bootrom.h)
 list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${chibios_SOURCE_DIR}/os/hal/ports/RP)
 list(APPEND CHIBIOS_HAL_INCLUDE_DIRS ${chibios_SOURCE_DIR}/os/hal/ports/RP/RP2040)
 
