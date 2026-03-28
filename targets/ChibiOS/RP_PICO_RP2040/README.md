@@ -24,10 +24,11 @@ The `nanoCLR.uf2` file contains both **nanoBooter** and **nanoCLR** combined.
 
 | Region | Start Address | Size | Description |
 |--------|--------------|------|-------------|
-| nanoBooter | `0x10000000` | 64 KB | Boot loader |
-| Config | `0x10010000` | 32 KB | Configuration block |
-| nanoCLR | `0x10018000` | 928 KB | CLR runtime + managed assemblies |
-| Deployment | `0x10100000` | 1 MB | Managed application deployment |
+| nanoBooter | `0x10000000` | 48 KB | Boot loader |
+| Config | `0x1000C000` | 32 KB | Configuration block |
+| nanoCLR | `0x10014000` | 928 KB | CLR runtime + managed assemblies |
+| Deployment | `0x100FC000` | 1008 KB | Managed application deployment |
+| LittleFS | `0x101F8000` | 32 KB | File system storage |
 
 ## Pin Mapping
 
