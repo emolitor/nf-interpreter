@@ -14,16 +14,16 @@
 extern EFlashDriver EFLD1;
 
 // Buffers required by littlefs_FS_Driver
-uint8_t lfs_inputBuffer[RP2040_FLASH_PAGE_SIZE];
-uint8_t lfs_outputBuffer[RP2040_FLASH_PAGE_SIZE];
+uint8_t lfs_inputBuffer[RP_FLASH_PAGE_SIZE];
+uint8_t lfs_outputBuffer[RP_FLASH_PAGE_SIZE];
 
-int32_t lfs_inputBufferSize = RP2040_FLASH_PAGE_SIZE;
-int32_t lfs_outputBufferSize = RP2040_FLASH_PAGE_SIZE;
+int32_t lfs_inputBufferSize = RP_FLASH_PAGE_SIZE;
+int32_t lfs_outputBufferSize = RP_FLASH_PAGE_SIZE;
 
 // Convert a littlefs block+offset to a flash offset relative to XIP base
 static inline flash_offset_t lfs_to_flash_offset(const struct lfs_config *c, lfs_block_t block, lfs_off_t off)
 {
-    return (flash_offset_t)((RP2040_LFS_BASE - RP2040_XIP_BASE) + (block * c->block_size) + off);
+    return (flash_offset_t)((RP2040_LFS_BASE - RP_FLASH_BASE) + (block * c->block_size) + off);
 }
 
 // target specific implementation of hal_lfs_sync
@@ -40,7 +40,7 @@ int32_t hal_lfs_sync_(const struct lfs_config *c)
 int32_t hal_lfs_erase_0(const struct lfs_config *c, lfs_block_t block)
 {
     flash_offset_t offset = lfs_to_flash_offset(c, block, 0);
-    flash_sector_t sector = (flash_sector_t)(offset / RP2040_FLASH_SECTOR_SIZE);
+    flash_sector_t sector = (flash_sector_t)(offset / RP_FLASH_SECTOR_SIZE);
 
     flash_error_t err = flashStartEraseSector(&EFLD1, sector);
     if (err != FLASH_NO_ERROR)
@@ -94,12 +94,12 @@ int32_t hal_lfs_prog_0(
 // target specific implementation of chip erase
 bool hal_lfs_erase_chip_0()
 {
-    flash_offset_t base_offset = (flash_offset_t)(RP2040_LFS_BASE - RP2040_XIP_BASE);
-    uint32_t sector_count = RP2040_LFS_SIZE / RP2040_FLASH_SECTOR_SIZE;
+    flash_offset_t base_offset = (flash_offset_t)(RP2040_LFS_BASE - RP_FLASH_BASE);
+    uint32_t sector_count = RP2040_LFS_SIZE / RP_FLASH_SECTOR_SIZE;
 
     for (uint32_t i = 0; i < sector_count; i++)
     {
-        flash_sector_t sector = (flash_sector_t)((base_offset / RP2040_FLASH_SECTOR_SIZE) + i);
+        flash_sector_t sector = (flash_sector_t)((base_offset / RP_FLASH_SECTOR_SIZE) + i);
 
         flash_error_t err = flashStartEraseSector(&EFLD1, sector);
         if (err != FLASH_NO_ERROR)

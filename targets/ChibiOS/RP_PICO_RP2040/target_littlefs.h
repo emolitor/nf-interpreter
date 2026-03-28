@@ -17,28 +17,21 @@
 // RP2040 Internal Flash (W25Q16JV)
 // 2 MB total, littlefs region: 0x101F8000 - 0x101FFFFF (32 KB)
 
-// XIP base address
-#define RP2040_XIP_BASE 0x10000000U
-
 // littlefs partition start address (XIP-mapped)
 #define RP2040_LFS_BASE 0x101F8000U
 
 // littlefs partition size
 #define RP2040_LFS_SIZE (32U * 1024U)
 
-// Flash geometry
-#define RP2040_FLASH_SECTOR_SIZE 0x1000  // 4 KB
-#define RP2040_FLASH_PAGE_SIZE   0x100   // 256 B
-
 //////////////////////////////////
 // Remap into littlefs defines
 
 #define LFS0_READ_SIZE      1
 #define LFS0_PROG_SIZE      1
-#define LFS0_BLOCK_SIZE     RP2040_FLASH_SECTOR_SIZE
-#define LFS0_BLOCK_COUNT    (RP2040_LFS_SIZE / RP2040_FLASH_SECTOR_SIZE)
+#define LFS0_BLOCK_SIZE     RP_FLASH_SECTOR_SIZE
+#define LFS0_BLOCK_COUNT    (RP2040_LFS_SIZE / RP_FLASH_SECTOR_SIZE)
 #define LFS0_BLOCK_CYCLES   100
-#define LFS0_CACHE_SIZE     RP2040_FLASH_PAGE_SIZE
+#define LFS0_CACHE_SIZE     RP_FLASH_PAGE_SIZE
 #define LFS0_LOOKAHEAD_SIZE (LFS0_BLOCK_COUNT / 8)
 
 #define LFS0_READ_HANDLER  hal_lfs_read_0

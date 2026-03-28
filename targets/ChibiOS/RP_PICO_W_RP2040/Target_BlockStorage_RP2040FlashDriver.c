@@ -7,12 +7,6 @@
 #include <hal_flash.h>
 #include <string.h>
 
-// RP2040 XIP flash base address
-#define RP2040_XIP_BASE 0x10000000U
-
-// RP2040 flash sector size (4KB)
-#define RP2040_FLASH_SECTOR_SIZE 4096U
-
 // Reference to ChibiOS EFL driver instance
 extern EFlashDriver EFLD1;
 
@@ -63,7 +57,7 @@ bool RP2040FlashDriver_Write(
     (void)readModifyWrite;
 
     // Convert absolute address to flash offset for EFL driver
-    flash_offset_t offset = (flash_offset_t)(startAddress - RP2040_XIP_BASE);
+    flash_offset_t offset = (flash_offset_t)(startAddress - RP_FLASH_BASE);
 
     flash_error_t err = flashProgram(&EFLD1, offset, numBytes, buffer);
 
@@ -93,10 +87,10 @@ bool RP2040FlashDriver_EraseBlock(void *context, ByteAddress address)
     (void)context;
 
     // Convert absolute address to flash offset
-    flash_offset_t offset = (flash_offset_t)(address - RP2040_XIP_BASE);
+    flash_offset_t offset = (flash_offset_t)(address - RP_FLASH_BASE);
 
     // Calculate sector number
-    flash_sector_t sector = (flash_sector_t)(offset / RP2040_FLASH_SECTOR_SIZE);
+    flash_sector_t sector = (flash_sector_t)(offset / RP_FLASH_SECTOR_SIZE);
 
     flash_error_t err = flashStartEraseSector(&EFLD1, sector);
     if (err != FLASH_NO_ERROR)
@@ -125,15 +119,15 @@ bool RP2040FlashDriver_EraseBlock(void *context, ByteAddress address)
 // nanoBooter flash access functions (called from WireProtocol_MonitorCommands)
 int nf_TargetFlashWrite(uint32_t startAddress, uint32_t length, const uint8_t *buffer)
 {
-    flash_offset_t offset = (flash_offset_t)(startAddress - RP2040_XIP_BASE);
+    flash_offset_t offset = (flash_offset_t)(startAddress - RP_FLASH_BASE);
     flash_error_t err = flashProgram(&EFLD1, offset, length, buffer);
     return (err == FLASH_NO_ERROR) ? 1 : 0;
 }
 
 int nf_TargetFlashErase(uint32_t address)
 {
-    flash_offset_t offset = (flash_offset_t)(address - RP2040_XIP_BASE);
-    flash_sector_t sector = (flash_sector_t)(offset / RP2040_FLASH_SECTOR_SIZE);
+    flash_offset_t offset = (flash_offset_t)(address - RP_FLASH_BASE);
+    flash_sector_t sector = (flash_sector_t)(offset / RP_FLASH_SECTOR_SIZE);
 
     flash_error_t err = flashStartEraseSector(&EFLD1, sector);
     if (err != FLASH_NO_ERROR)
