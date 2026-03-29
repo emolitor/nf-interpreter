@@ -149,7 +149,7 @@ int nf_TargetFlashErase(uint32_t address)
         {
             chThdSleepMilliseconds(wait_time);
         }
-    } while (err == FLASH_NO_ERROR);
+    } while (err == FLASH_BUSY_ERASING);
 
     return (err == FLASH_NO_ERROR) ? 1 : 0;
 }
