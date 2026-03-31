@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) .NET Foundation and Contributors
 // See LICENSE file in the project root for full license information.
 //
@@ -49,7 +49,7 @@ int32_t hal_lfs_erase_0(const struct lfs_config *c, lfs_block_t block)
     }
 
     // Wait for erase to complete (synchronous with ROM functions)
-    uint32_t wait_time;
+    uint32_t wait_time = 0;
     do
     {
         err = flashQueryErase(&EFLD1, &wait_time);
@@ -107,7 +107,7 @@ bool hal_lfs_erase_chip_0()
             return false;
         }
 
-        uint32_t wait_time;
+        uint32_t wait_time = 0;
         do
         {
             err = flashQueryErase(&EFLD1, &wait_time);
