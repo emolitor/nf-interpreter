@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) .NET Foundation and Contributors
 // See LICENSE file in the project root for full license information.
 //
@@ -100,7 +100,7 @@ bool RP2040FlashDriver_EraseBlock(void *context, ByteAddress address)
     }
 
     // Wait for erase to complete
-    uint32_t wait_time;
+    uint32_t wait_time = 0;
     do
     {
         err = flashQueryErase(&EFLD1, &wait_time);
@@ -137,7 +137,7 @@ int nf_TargetFlashErase(uint32_t address)
         return 0;
     }
 
-    uint32_t wait_time;
+    uint32_t wait_time = 0;
     do
     {
         err = flashQueryErase(&EFLD1, &wait_time);
