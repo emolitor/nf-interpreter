@@ -182,6 +182,13 @@ static const uint8_t vcom_string0[] = {
 };
 
 
+// USB string descriptors are length-prefixed (not NUL-terminated), so the
+// trailing NUL from the wide-string literal is intentionally truncated.
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunterminated-string-initialization"
+#endif
+
 // Vendor string
 static const usb_string_vendor usb_vendor = {
   sizeof(usb_vendor),
@@ -204,6 +211,10 @@ static usb_string_serial_number usb_serial_number = {
   USB_DESC_BYTE(USB_DESCRIPTOR_STRING),
   USB_STRING_SERIAL_NUMBER
 };
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 
 /*
