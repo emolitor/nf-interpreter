@@ -139,12 +139,6 @@ foreach(SRC_FILE ${CHIBIOS_HAL_SRCS})
     find_file(CHIBIOS_HAL_SRC_FILE ${SRC_FILE}
         PATHS
 
-<<<<<<< HEAD
-            # ChibiOS trunk EFL driver sources
-            ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/EFLv1
-
-=======
->>>>>>> upstream/add-pico-chibios
             ${chibios_SOURCE_DIR}/os/common/ports/ARMv6-M/compilers/GCC
             ${chibios_SOURCE_DIR}/os/common/startup/ARMCMx/compilers/GCC
             ${chibios_SOURCE_DIR}/os/common/startup/ARMCMx/devices/RP2040
