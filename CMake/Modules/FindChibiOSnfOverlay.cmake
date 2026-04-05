@@ -1,4 +1,4 @@
-#
+﻿#
 # Copyright (c) .NET Foundation and Contributors
 # See LICENSE file in the project root for full license information.
 #
@@ -7,7 +7,7 @@
 list(APPEND ChibiOSnfOverlay_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/include)
 
 ####################################################################################
-# WHEN ADDING A NEW CHIBIOS OVERLAY component add the include directory(ies) below 
+# WHEN ADDING A NEW CHIBIOS OVERLAY component add the include directory(ies) below
 ####################################################################################
 
 # STM32-specific overlay components
@@ -31,9 +31,9 @@ endif()
 
 ##################################################################################################################################
 # Add above the required include directory(ies) for a new nanoFramework overlay component that you are adding
-# following the template below. 
+# following the template below.
 #
-# If the component includes a low level driver specific to a series, make sure you add the include dirs 
+# If the component includes a low level driver specific to a series, make sure you add the include dirs
 # in the CHIBIOS_NNNNNN_sources.cmake
 #
 # list(APPEND ChibiOSnfOverlay_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/include/<path-here>)
@@ -46,7 +46,7 @@ endif()
 list(APPEND ChibiOSnfOverlay_SOURCES ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/src/hal_community.c)
 
 ####################################################################################################
-# WHEN ADDING A NEW CHIBIOS OVERLAY component add the source file(s) specific to this series below 
+# WHEN ADDING A NEW CHIBIOS OVERLAY component add the source file(s) specific to this series below
 ####################################################################################################
 
 # STM32-specific overlay sources
@@ -56,7 +56,7 @@ if(TARGET_VENDOR STREQUAL "ST")
     # component STM32_CRC
     list(APPEND ChibiOSnfOverlay_SOURCES ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/src/stm32_crc/hal_stm32_crc.c)
     # component STM32_RNG
-    list(APPEND ChibiOSnfOverlay_SOURCES ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/src/stm32_rng/hal_stm32_rng.c) 
+    list(APPEND ChibiOSnfOverlay_SOURCES ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/src/stm32_rng/hal_stm32_rng.c)
     # component STM32_FSMC (Flexible Memory Controller)
     list(APPEND ChibiOSnfOverlay_SOURCES ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/src/stm32_fsmc/hal_stm32_fsmc.c)
     # component STM32_ONEWIRE (One Wire driver)
@@ -72,7 +72,7 @@ endif()
 # Add above ALL the source code file(s) required for a new nanoFramework overlay component that you are adding
 # following the template below.
 #
-# If the component includes a low level driver specific to a series, make sure you add the source files 
+# If the component includes a low level driver specific to a series, make sure you add the source files
 # in the CHIBIOS_NNNNNN_sources.cmake
 #
 # list(APPEND ChibiOSnfOverlay_SOURCES ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/src/<path-here>)

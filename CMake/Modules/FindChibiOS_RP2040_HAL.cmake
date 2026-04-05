@@ -1,4 +1,4 @@
-#
+﻿#
 # Copyright (c) .NET Foundation and Contributors
 # See LICENSE file in the project root for full license information.
 #
@@ -79,13 +79,13 @@ set(CHIBIOS_HAL_SRCS
     # HAL-OSAL files
     hal.c
     hal_st.c
-    
+
     hal_buffers.c
     hal_queues.c
     hal_flash.c
     hal_mmcsd.c
     hal_safety.c
-    
+
     hal_adc.c
     hal_can.c
     hal_crypto.c
@@ -137,17 +137,24 @@ foreach(SRC_FILE ${CHIBIOS_HAL_SRCS})
     set(CHIBIOS_HAL_SRC_FILE SRC_FILE -NOTFOUND)
 
     find_file(CHIBIOS_HAL_SRC_FILE ${SRC_FILE}
-        PATHS 
+        PATHS
 
+<<<<<<< HEAD
             # ChibiOS trunk EFL driver sources
             ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/EFLv1
 
+=======
+>>>>>>> upstream/add-pico-chibios
             ${chibios_SOURCE_DIR}/os/common/ports/ARMv6-M/compilers/GCC
             ${chibios_SOURCE_DIR}/os/common/startup/ARMCMx/compilers/GCC
             ${chibios_SOURCE_DIR}/os/common/startup/ARMCMx/devices/RP2040
 
             ${chibios_SOURCE_DIR}/os/hal/src
             ${chibios_SOURCE_DIR}/os/hal/ports/common/ARMCMx
+
+            # >>> To use nanoFramework overlay, uncomment next line and comment the one after <<<
+            # ${CMAKE_SOURCE_DIR}/targets/ChibiOS/_nf-overlay/os/hal/ports/RP/LLD/EFLv1
+            ${chibios_SOURCE_DIR}/os/hal/ports/RP/LLD/EFLv1
 
             ${chibios_SOURCE_DIR}/os/hal/ports/RP/RP2040
 
