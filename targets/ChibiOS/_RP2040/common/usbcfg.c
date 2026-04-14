@@ -6,6 +6,10 @@
 
 #include "hal.h"
 
+// USB string descriptors intentionally omit the NUL terminator (length-prefixed, not NUL-terminated)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunterminated-string-initialization"
+
 /* Virtual serial port over USB.*/
 SerialUSBDriver SDU1;
 
@@ -205,6 +209,7 @@ static usb_string_serial_number usb_serial_number = {
   USB_STRING_SERIAL_NUMBER
 };
 
+#pragma GCC diagnostic pop
 
 /*
  * Strings wrappers array.
